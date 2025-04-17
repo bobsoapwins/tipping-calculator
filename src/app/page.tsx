@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { Users, PiggyBank } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Users, PiggyBank } from "lucide-react";
+
 
 const ResultRow = ({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) => (
   <div className="grid grid-cols-[1fr_auto] items-center gap-2 py-1">
@@ -72,7 +71,7 @@ export default function Home() {
                 type="range"
                 id="tipPercentage"
                 min="0"
-                max="30"
+                max="100"
                 step="1"
                 value={tipPercentage}
                 className="w-full h-2 bg-primary rounded-lg appearance-none cursor-pointer accent-accent"
