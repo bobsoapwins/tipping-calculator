@@ -48,12 +48,12 @@ export default function Home() {
     if (!billAmount) return {
       tipAmount: 0,
       totalBill: 0,
-      amountPerPerson: 0
+      amountPerPerson: "0.00" // Ensure amountPerPerson is a string
     };
 
     const tipAmount = billAmount * (tipPercentage / 100);
     const totalBill = billAmount + tipAmount;
-    const amountPerPerson = totalBill / numberOfPeople;
+    const amountPerPerson = numberOfPeople === 0 ? "Invalid" : (totalBill / numberOfPeople).toFixed(2);
 
     return {
       tipAmount,
@@ -138,7 +138,7 @@ export default function Home() {
           <div className="grid gap-4">
             <ResultRow label="Tip Amount" value={`$${tipAmount.toFixed(2)}`} icon={<PiggyBank className="w-4 h-4" />} />
             <ResultRow label="Total Bill" value={`$${totalBill.toFixed(2)}`} icon={<PiggyBank className="w-4 h-4" />} />
-            <ResultRow label="Amount Per Person" value={`$${amountPerPerson.toFixed(2)}`} icon={<Users className="w-4 h-4" />} />
+            <ResultRow label="Amount Per Person" value={amountPerPerson === "Invalid" ? <span className="text-red-500">Invalid</span> : `$${amountPerPerson}`} icon={<Users className="w-4 h-4" />} />
           </div>
         </CardContent>
       </Card>
