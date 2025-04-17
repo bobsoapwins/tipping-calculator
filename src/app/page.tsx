@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, PiggyBank } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Badge } from "@/components/ui/badge";
-
 
 const ResultRow = ({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) => (
   <div className="grid grid-cols-[1fr_auto] items-center gap-2 py-1">
@@ -15,15 +18,31 @@ const ResultRow = ({ label, value, icon }: { label: string; value: string; icon:
       {icon}
       <Label className="text-sm">{label}</Label>
     </div>
-    <Badge variant="secondary">{value}</Badge>
+    <div className="flex items-center gap-2">
+      <Badge variant="secondary">{value}</Badge>
+    </div>
   </div>
 );
 
+const formSchema = z.object({
+  billAmount: z.number().optional(),
+  tipPercentage: z.number().optional(),
+  numberOfPeople: z.number().min(1, { message: "Number of people must be at least 1." }).optional(),
+});
 
 export default function Home() {
   const [billAmount, setBillAmount] = useState<number | null>(null);
   const [tipPercentage, setTipPercentage] = useState(0);
   const [numberOfPeople, setNumberOfPeople] = useState(1);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      billAmount: null,
+      tipPercentage: 0,
+      numberOfPeople: 1,
+    },
+  });
 
   const calculateTip = () => {
     if (!billAmount) return {
@@ -53,53 +72,66 @@ export default function Home() {
           <CardDescription className="text-center">A simple tipping calculator by North Dunne</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="billAmount">Amount To Be Paid</Label>
-            <Input
-              type="number"
-              id="billAmount"
-              placeholder="Enter bill amount"
-              value={billAmount === null ? '' : billAmount}
-              onChange={(e) => setBillAmount(parseFloat(e.target.value))}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="tipPercentage">Tip Percentage</Label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                id="tipPercentage"
-                min="0"
-                max="100"
-                step="1"
-                value={tipPercentage}
-                className="w-full h-2 bg-primary rounded-lg appearance-none cursor-pointer accent-accent"
-                onChange={(e) => setTipPercentage(parseInt(e.target.value))}
-              />
+          <Form {...form}>
+            <div className="grid gap-2">
+              <Label htmlFor="billAmount">Amount To Be Paid</Label>
               <Input
                 type="number"
-                id="tipPercentage-number"
-                value={tipPercentage}
-                className="w-20"
-                onChange={(e) => setTipPercentage(parseInt(e.target.value))}
+                id="billAmount"
+                placeholder="Enter bill amount"
+                value={billAmount === null ? '' : billAmount}
+                onChange={(e) => setBillAmount(parseFloat(e.target.value))}
               />
-              <span>%</span>
             </div>
 
-          </div>
+            <div className="grid gap-2">
+              <Label htmlFor="tipPercentage">Tip Percentage</Label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="range"
+                  id="tipPercentage"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={tipPercentage}
+                  className="w-full h-2 bg-primary rounded-lg appearance-none cursor-pointer accent-accent"
+                  onChange={(e) => setTipPercentage(parseInt(e.target.value))}
+                />
+                <Input
+                  type="number"
+                  id="tipPercentage-number"
+                  value={tipPercentage}
+                  className="w-20"
+                  onChange={(e) => setTipPercentage(parseInt(e.target.value))}
+                />
+                <span>%</span>
+              </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="numberOfPeople">Number of People</Label>
-            <Input
-              type="number"
-              id="numberOfPeople"
-              min="1"
-              placeholder="Enter number of people"
-              value={numberOfPeople}
-              onChange={(e) => setNumberOfPeople(parseInt(e.target.value))}
+            </div>
+
+            <FormField
+              control={form.control}
+              name="numberOfPeople"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of People</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Enter number of people"
+                      min="1"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(parseInt(e.target.value));
+                        setNumberOfPeople(parseInt(e.target.value));
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
+          </Form>
 
           <Separator />
 
