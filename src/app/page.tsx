@@ -55,7 +55,7 @@ export default function Home() {
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="billAmount">Bill Amount</Label>
+            <Label htmlFor="billAmount">Amount To Be Paid</Label>
             <Input
               type="number"
               id="billAmount"
