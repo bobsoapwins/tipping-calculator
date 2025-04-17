@@ -12,7 +12,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
-        value={value?.toString()}
+        value={(value === null || value === undefined) ? '' : value.toString()}
         {...props}
       />
     )
@@ -21,3 +21,4 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 Input.displayName = "Input"
 
 export { Input }
+
