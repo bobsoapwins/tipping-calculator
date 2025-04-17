@@ -51,7 +51,7 @@ export default function Home() {
       <Card className="w-full max-w-md space-y-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-semibold text-center">TipEase</CardTitle>
-          <CardDescription className="text-center">Calculate your tip with ease!</CardDescription>
+          <CardDescription className="text-center">A simple tipping calculator by North Dunne</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
