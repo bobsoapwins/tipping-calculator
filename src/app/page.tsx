@@ -60,6 +60,7 @@ export default function Home() {
               type="number"
               id="billAmount"
               placeholder="Enter bill amount"
+              value={billAmount === null ? '' : billAmount}
               onChange={(e) => setBillAmount(parseFloat(e.target.value))}
             />
           </div>
@@ -108,7 +109,6 @@ export default function Home() {
             <ResultRow label="Total Bill" value={`$${totalBill.toFixed(2)}`} icon={<PiggyBank className="w-4 h-4" />} />
             <ResultRow label="Amount Per Person" value={`$${amountPerPerson.toFixed(2)}`} icon={<Users className="w-4 h-4" />} />
           </div>
-          <Button className="w-full">Calculate</Button>
         </CardContent>
       </Card>
     </div>
