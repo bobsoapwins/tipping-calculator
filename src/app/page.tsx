@@ -23,7 +23,7 @@ const ResultRow = ({ label, value, icon }: { label: string; value: string; icon:
 
 export default function Home() {
   const [billAmount, setBillAmount] = useState<number | null>(null);
-  const [tipPercentage, setTipPercentage] = useState(15);
+  const [tipPercentage, setTipPercentage] = useState(0);
   const [numberOfPeople, setNumberOfPeople] = useState(1);
 
   const calculateTip = () => {
