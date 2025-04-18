@@ -12,11 +12,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Badge } from "@/components/ui/badge";
 
-const ResultRow = ({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) => (
+const ResultRow = ({ label, value, icon, isError }: { label: string; value: string; icon: React.ReactNode; isError?: boolean }) => (
   <div className="grid grid-cols-[1fr_auto] items-center gap-2 py-1">
     <div className="flex items-center gap-2">
       {icon}
-      <Label className="text-sm">{label}</Label>
+      <Label className={`text-sm ${isError ? 'text-red-500' : ''}`}>{label}</Label>
     </div>
     <div className="flex items-center gap-2">
       <Badge variant="secondary">{value}</Badge>
@@ -138,7 +138,12 @@ export default function Home() {
           <div className="grid gap-4">
             <ResultRow label="Tip Amount" value={`$${tipAmount.toFixed(2)}`} icon={<PiggyBank className="w-4 h-4" />} />
             <ResultRow label="Total Bill" value={`$${totalBill.toFixed(2)}`} icon={<PiggyBank className="w-4 h-4" />} />
-            <ResultRow label="Amount Per Person" value={amountPerPerson === "Invalid" ? <span className="text-red-500">Invalid</span> : `$${amountPerPerson}`} icon={<Users className="w-4 h-4" />} />
+            <ResultRow
+              label="Amount Per Person"
+              value={amountPerPerson === "Invalid" ? <span className="text-red-500">Invalid</span> : `$${amountPerPerson}`}
+              icon={<Users className="w-4 h-4" />}
+              isError={amountPerPerson === "Invalid"}
+            />
           </div>
         </CardContent>
       </Card>
