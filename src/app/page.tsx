@@ -141,7 +141,7 @@ export default function Home() {
             <ResultRow
               label="Amount Per Person"
               value={amountPerPerson === "Invalid" ? <span className="text-red-500">Invalid</span> : `$${amountPerPerson}`}
-              icon={<Users className="w-4 h-4" />}
+              icon={<Users className={`w-4 h-4 ${amountPerPerson === "Invalid" ? 'text-red-500' : ''}`} />}
               isError={amountPerPerson === "Invalid"}
             />
           </div>
