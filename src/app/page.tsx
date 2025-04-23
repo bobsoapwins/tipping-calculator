@@ -19,7 +19,7 @@ const ResultRow = ({ label, value, icon, isError }: { label: string; value: stri
       <Label className={`text-sm ${isError ? 'text-red-500' : ''}`}>{label}</Label>
     </div>
     <div className="flex items-center gap-2">
-      <Badge variant="secondary">{value}</Badge>
+      <Badge variant="secondary" className={isError ? 'bg-red-100 text-red-500 border-red-500' : ''}>{value}</Badge>
     </div>
   </div>
 );
