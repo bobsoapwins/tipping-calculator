@@ -162,7 +162,10 @@ export default function Home() {
                       type="number"
                       placeholder="Enter number of people"
                       min="1"
-                      className="transition-all duration-300 focus:ring-2 focus:ring-primary"
+                      className={cn(
+                        'transition-all duration-300 focus:ring-2 focus:ring-primary',
+                        field.value === 0 ? 'border-red-500' : ''
+                      )}
                       {...field}
                       onChange={e => {
                         field.onChange(parseInt(e.target.value));
