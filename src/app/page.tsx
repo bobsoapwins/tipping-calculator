@@ -25,6 +25,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
+import {useToast} from '@/hooks/use-toast';
 
 const ResultRow = ({
   label,
@@ -69,6 +70,7 @@ export default function Home() {
   const [tipPercentage, setTipPercentage] = useState(0);
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const {toast} = useToast();
 
   useEffect(() => {
     // Simulate loading delay
@@ -109,6 +111,16 @@ export default function Home() {
   };
 
   const {tipAmount, totalBill, amountPerPerson} = calculateTip();
+
+  useEffect(() => {
+    if (numberOfPeople === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Input Invalid',
+        description: 'Number of people cannot be zero.',
+      });
+    }
+  }, [numberOfPeople, toast]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -151,7 +163,7 @@ export default function Home() {
                 <Input
                   type="number"
                   id="tipPercentage-number"
-				  min="0"
+				          min="0"
                   value={tipPercentage}
                   className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary"
                   onChange={e => setTipPercentage(parseInt(e.target.value))}
@@ -177,8 +189,9 @@ export default function Home() {
                       )}
                       {...field}
                       onChange={e => {
-                        field.onChange(parseInt(e.target.value));
-                        setNumberOfPeople(parseInt(e.target.value));
+                        const value = parseInt(e.target.value);
+                        field.onChange(value);
+                        setNumberOfPeople(value);
                       }}
                     />
                   </FormControl>
