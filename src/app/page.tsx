@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, Suspense, useEffect} from 'react';
+import {useState, useEffect} from 'react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {
@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {Users, PiggyBank} from 'lucide-react';
+import {Users, PiggyBank, CheckCircle} from 'lucide-react';
 import {Separator} from '@/components/ui/separator';
 import {
   Form,
@@ -65,12 +65,33 @@ const formSchema = z.object({
     .optional(),
 });
 
-const LoadingScreen = () => (
-  <div className="flex flex-col items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
-    <p className="mt-4 text-lg font-semibold">Loading...</p>
-  </div>
-);
+const LoadingScreen = () => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500); // Simulate loading time
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      {loading ? (
+        <>
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
+          <p className="mt-4 text-lg font-semibold">Loading...</p>
+        </>
+      ) : (
+        <div className="flex flex-col items-center">
+          <CheckCircle className="text-primary h-32 w-32" />
+          <p className="mt-4 text-lg font-semibold">Done!</p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function Home() {
   const [billAmount, setBillAmount] = useState<number | null>(null);
