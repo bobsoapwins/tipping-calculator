@@ -155,7 +155,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 animate-in fade-in duration-700">
       <Card className="w-full max-w-md space-y-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-semibold text-center">
@@ -173,7 +173,7 @@ export default function Home() {
                 type="number"
                 id="billAmount"
                 placeholder="Enter bill amount"
-				        min="0"
+                min="0"
                 value={billAmount === null ? '' : billAmount}
                 onChange={e => setBillAmount(parseFloat(e.target.value))}
                 className="transition-all duration-300 focus:ring-2 focus:ring-primary"
@@ -196,7 +196,7 @@ export default function Home() {
                 <Input
                   type="number"
                   id="tipPercentage-number"
-				          min="0"
+                  min="0"
                   value={tipPercentage}
                   className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary"
                   onChange={e => setTipPercentage(parseInt(e.target.value))}
