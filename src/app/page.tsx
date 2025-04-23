@@ -65,6 +65,13 @@ const formSchema = z.object({
     .optional(),
 });
 
+const LoadingScreen = () => (
+  <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
+    <p className="mt-4 text-lg font-semibold">Loading...</p>
+  </div>
+);
+
 export default function Home() {
   const [billAmount, setBillAmount] = useState<number | null>(null);
   const [tipPercentage, setTipPercentage] = useState(0);
@@ -121,6 +128,10 @@ export default function Home() {
       });
     }
   }, [numberOfPeople, toast]);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
