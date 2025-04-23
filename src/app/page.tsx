@@ -151,6 +151,7 @@ export default function Home() {
                 <Input
                   type="number"
                   id="tipPercentage-number"
+				  min="0"
                   value={tipPercentage}
                   className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary"
                   onChange={e => setTipPercentage(parseInt(e.target.value))}
