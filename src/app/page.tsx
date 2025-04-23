@@ -96,7 +96,7 @@ export default function Home() {
                   max="100"
                   step="1"
                   value={tipPercentage}
-                  className="w-full h-2 bg-primary rounded-lg appearance-none cursor-pointer accent-accent"
+                  className="w-full h-2 bg-primary rounded-lg appearance-none cursor-pointer accent-accent transition-all duration-300"
                   onChange={(e) => setTipPercentage(parseInt(e.target.value))}
                 />
                 <Input
