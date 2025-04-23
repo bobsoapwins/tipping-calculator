@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, Suspense} from 'react';
+import {useState, Suspense, useEffect} from 'react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {
@@ -68,6 +68,14 @@ export default function Home() {
   const [billAmount, setBillAmount] = useState<number | null>(null);
   const [tipPercentage, setTipPercentage] = useState(0);
   const [numberOfPeople, setNumberOfPeople] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading delay
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -164,7 +172,7 @@ export default function Home() {
                       min="1"
                       className={cn(
                         'transition-all duration-300 focus:ring-2 focus:ring-primary',
-                        field.value === 0 ? 'border-red-500' : ''
+                        field.value === 0 ? 'border-red-700' : ''
                       )}
                       {...field}
                       onChange={e => {
