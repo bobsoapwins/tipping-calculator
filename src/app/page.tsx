@@ -26,6 +26,7 @@ import * as z from 'zod';
 import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
 import {useToast} from '@/hooks/use-toast';
+import {Progress} from '@/components/ui/progress';
 
 const ResultRow = ({
   label,
@@ -65,23 +66,25 @@ const formSchema = z.object({
     .optional(),
 });
 
-const LoadingScreen = () => {
+const LoadingScreen = ({progress}: {progress: number}) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500); // Simulate loading time
+    if (progress === 100) {
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 500); // Simulate loading time
 
-    return () => clearTimeout(timer);
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [progress]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       {loading ? (
         <>
-          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
-          <p className="mt-4 text-lg font-semibold">Loading...</p>
+          <Progress value={progress} className="w-64" />
+          <p className="mt-4 text-lg font-semibold">Loading... {progress}%</p>
         </>
       ) : (
         <div className="flex flex-col items-center">
@@ -99,13 +102,24 @@ export default function Home() {
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const {toast} = useToast();
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Simulate loading delay
-    setTimeout(() => {
+    let interval: NodeJS.Timeout;
+    if (isLoading && progress < 100) {
+      interval = setInterval(() => {
+        setProgress(prevProgress => {
+          const newProgress = Math.min(prevProgress + 10, 100);
+          return newProgress;
+        });
+      }, 100);
+    } else {
       setIsLoading(false);
-    }, 500);
-  }, []);
+      clearInterval(interval);
+    }
+
+    return () => clearInterval(interval);
+  }, [isLoading, progress]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -151,7 +165,7 @@ export default function Home() {
   }, [numberOfPeople, toast]);
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen progress={progress} />;
   }
 
   return (
