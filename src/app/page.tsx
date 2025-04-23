@@ -110,10 +110,12 @@ export default function Home() {
       interval = setInterval(() => {
         setProgress(prevProgress => {
           const randomIncrement = Math.floor(Math.random() * 15) + 5; // Random increment between 5 and 20
-          const newProgress = Math.min(prevProgress + randomIncrement, 100);
+          let newProgress = Math.min(prevProgress + randomIncrement, 100);
           return newProgress;
         });
       }, 100);
+    } else if (progress < 100){
+      setProgress(100);
     } else {
       setIsLoading(false);
       clearInterval(interval);
