@@ -141,6 +141,7 @@ export default function Home() {
                 type="number"
                 id="billAmount"
                 placeholder="Enter bill amount"
+				        min="0"
                 value={billAmount === null ? '' : billAmount}
                 onChange={e => setBillAmount(parseFloat(e.target.value))}
                 className="transition-all duration-300 focus:ring-2 focus:ring-primary"
