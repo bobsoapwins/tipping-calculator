@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const ResultRow = ({ label, value, icon, isError }: { label: string; value: string; icon: React.ReactNode; isError?: boolean }) => (
   <div className="grid grid-cols-[1fr_auto] items-center gap-2 py-1">
@@ -102,7 +103,7 @@ export default function Home() {
                   type="number"
                   id="tipPercentage-number"
                   value={tipPercentage}
-                  className="w-20"
+                  className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary"
                   onChange={(e) => setTipPercentage(parseInt(e.target.value))}
                 />
                 <span>%</span>
@@ -121,6 +122,7 @@ export default function Home() {
                       type="number"
                       placeholder="Enter number of people"
                       min="1"
+                      className="transition-all duration-300 focus:ring-2 focus:ring-primary"
                       {...field}
                       onChange={(e) => {
                         field.onChange(parseInt(e.target.value));
@@ -142,7 +144,7 @@ export default function Home() {
             <ResultRow
               label="Amount Per Person"
               value={amountPerPerson === "Invalid" ? <span className="text-red-500">Invalid</span> : `$${amountPerPerson}`}
-              icon={<Users className={`w-4 h-4 ${amountPerPerson === "Invalid" ? 'text-red-500' : ''}`} />}
+              icon={<Users className={cn("w-4 h-4", { "text-red-500": amountPerPerson === "Invalid" })} />}
               isError={amountPerPerson === "Invalid"}
             />
           </div>
