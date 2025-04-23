@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,6 +81,7 @@ export default function Home() {
                 placeholder="Enter bill amount"
                 value={billAmount === null ? '' : billAmount}
                 onChange={(e) => setBillAmount(parseFloat(e.target.value))}
+                className="transition-all duration-300 focus:ring-2 focus:ring-primary"
               />
             </div>
 
