@@ -175,7 +175,7 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center min-h-screen p-4 animate-in fade-in duration-700">
       <Card className="w-full max-w-md space-y-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-semibold text-center">
+          <CardTitle className="text-2xl font-semibold text-center transition-colors duration-700">
             Tip Smarter, Not Harder
           </CardTitle>
           <CardDescription className="text-center">
