@@ -58,8 +58,8 @@ const ResultRow = ({
 );
 
 const formSchema = z.object({
-  billAmount: z.number().optional(),
-  tipPercentage: z.number().optional(),
+  billAmount: z.number().min(0, {message: 'Amount must be at least 0'}).optional(),
+  tipPercentage: z.number().min(0, {message: 'Percentage must be at least 0'}).max(100, {message: 'Percentage cannot be more than 100'}).optional(),
   numberOfPeople: z
     .number()
     .min(1, {message: 'Number of people must be at least 1.'})
@@ -192,7 +192,7 @@ export default function Home() {
                 placeholder="Enter bill amount"
                 min="0"
                 value={billAmount === null ? '' : billAmount}
-                onChange={e => setBillAmount(parseFloat(e.target.value))}
+                onChange={e => setBillAmount(e.target.value === '' ? null : parseFloat(e.target.value))}
                 className="transition-all duration-300 focus:ring-2 focus:ring-primary"
               />
             </div>
