@@ -216,7 +216,7 @@ export default function Home() {
                   min="0"
                   value={tipPercentage}
                   className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary"
-                  onChange={e => setTipPercentage(parseInt(e.target.value))}
+                  onChange={e => setTipPercentage(e.target.value === '' ? 0 : parseInt(e.target.value))}
                 />
                 <span>%</span>
               </div>
