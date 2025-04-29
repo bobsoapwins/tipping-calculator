@@ -1,3 +1,4 @@
+
 'use client';
 
 import {useState, useEffect} from 'react';
@@ -60,7 +61,7 @@ const ResultRow = ({
 
 const formSchema = z.object({
   billAmount: z.number().min(0, {message: 'Amount must be at least 0'}).optional(),
-  tipPercentage: z.number().min(0, {message: 'Percentage must be at least 0'}).max(100, {message: 'Percentage cannot be more than 100'}).optional(),
+  tipPercentage: z.number().min(0, {message: 'Percentage must be at least 0'}).optional(), // Removed max(100)
   numberOfPeople: z
     .number()
     .min(1, {message: 'Number of people must be at least 1.'})
@@ -169,7 +170,7 @@ export default function Home() {
 
   useEffect(() => {
     const currentNumPeople = numberOfPeople === null ? 0 : numberOfPeople;
-    if (currentNumPeople <= 0) {
+    if (currentNumPeople !== null && currentNumPeople <= 0) {
       toast({
         variant: 'destructive',
         title: 'Input Invalid',
@@ -227,13 +228,13 @@ export default function Home() {
                   type="number"
                   id="tipPercentage-number"
                   min="0"
-                  max="100" // Added max value
+                  // Removed max="100"
                   value={tipPercentage}
                   className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary"
                   onChange={e => {
                     const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                    // Clamp value between 0 and 100
-                    const clampedVal = Math.max(0, Math.min(100, isNaN(val) ? 0 : val));
+                    // Clamp value to be at least 0
+                    const clampedVal = Math.max(0, isNaN(val) ? 0 : val);
                     setTipPercentage(clampedVal);
                   }}
                 />
