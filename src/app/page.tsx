@@ -1,7 +1,7 @@
 
 'use client';
 
-import {useState, useEffect} from 'react';
+import {useState, useEffect, Suspense} from 'react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {
@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {Users, PiggyBank, CheckCircle} from 'lucide-react';
+import { Users, PiggyBank, CheckCircle } from 'lucide-react';
 import {Separator} from '@/components/ui/separator';
 import {
   Form,
@@ -61,7 +61,7 @@ const ResultRow = ({
 
 const formSchema = z.object({
   billAmount: z.number().min(0, {message: 'Amount must be at least 0'}).optional(),
-  tipPercentage: z.number().min(0, {message: 'Percentage must be at least 0'}).optional(), // Removed max(100)
+  tipPercentage: z.number().min(0, {message: 'Percentage must be at least 0'}).optional(),
   numberOfPeople: z
     .number()
     .min(1, {message: 'Number of people must be at least 1.'})
@@ -143,7 +143,8 @@ export default function Home() {
   });
 
   const calculateTip = () => {
-    const currentNumPeople = numberOfPeople === null ? 0 : numberOfPeople; // Treat null as 0 for calculation logic
+    const currentNumPeople = numberOfPeople === null || isNaN(Number(numberOfPeople)) ? 0 : numberOfPeople;
+
 
     if (!billAmount || billAmount < 0)
       return {
@@ -168,16 +169,7 @@ export default function Home() {
 
   const {tipAmount, totalBill, amountPerPerson} = calculateTip();
 
-  useEffect(() => {
-    const currentNumPeople = numberOfPeople === null ? 0 : numberOfPeople;
-    if (currentNumPeople !== null && currentNumPeople <= 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Input Invalid',
-        description: 'Number of people cannot be zero or less.',
-      });
-    }
-  }, [numberOfPeople, toast]);
+  // Removed useEffect that triggered toast for invalid number of people
 
   if (isLoading) {
     return <LoadingScreen progress={progress} />;
@@ -220,7 +212,7 @@ export default function Home() {
                   min="0"
                   max="100"
                   step="1"
-                  value={tipPercentage.toString()} // Ensure value is string
+                  value={tipPercentage.toString()} 
                   className="w-full h-2 bg-primary rounded-lg appearance-none cursor-pointer accent-accent transition-all duration-300"
                   onChange={e => setTipPercentage(parseInt(e.target.value))}
                 />
@@ -228,12 +220,10 @@ export default function Home() {
                   type="number"
                   id="tipPercentage-number"
                   min="0"
-                  // Removed max="100"
                   value={tipPercentage}
                   className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary"
                   onChange={e => {
                     const val = e.target.value === '' ? 0 : parseInt(e.target.value);
-                    // Clamp value to be at least 0
                     const clampedVal = Math.max(0, isNaN(val) ? 0 : val);
                     setTipPercentage(clampedVal);
                   }}
@@ -252,22 +242,22 @@ export default function Home() {
                     <Input
                       type="number"
                       placeholder="Enter number of people"
-                      min="1" // Keep min for native validation, but handle 0 via state/style
+                      min="1" 
                       className={cn(
                         'transition-all duration-300 focus:ring-2 focus:ring-primary',
-                        (field.value !== null && field.value <= 0) ? 'border-red-700 text-red-700' : '' // Apply red border and text if <= 0
+                        (field.value !== null && field.value <= 0) ? 'border-red-700 text-red-700' : '' 
                       )}
                       {...field}
-                       value={field.value === null ? '' : field.value} // Handle null value for input
+                       value={field.value === null ? '' : field.value} 
                        onChange={e => {
                         const rawValue = e.target.value;
                         if (rawValue === '') {
-                           field.onChange(null); // Pass null up
+                           field.onChange(null); 
                            setNumberOfPeople(null);
                         } else {
                            const value = parseInt(rawValue);
                            if (!isNaN(value)) {
-                             field.onChange(value); // Pass the number up
+                             field.onChange(value); 
                              setNumberOfPeople(value);
                            }
                          }
@@ -288,13 +278,13 @@ export default function Home() {
               label="Tip Amount"
               value={`$${tipAmount.toFixed(2)}`}
               icon={<PiggyBank className="w-4 h-4" />}
-              isError={amountPerPerson === 'Invalid'} // Error if amountPerPerson is Invalid
+              isError={amountPerPerson === 'Invalid'} 
             />
             <ResultRow
               label="Total Bill"
               value={`$${totalBill.toFixed(2)}`}
               icon={<PiggyBank className="w-4 h-4" />}
-              isError={amountPerPerson === 'Invalid'} // Error if amountPerPerson is Invalid
+              isError={amountPerPerson === 'Invalid'} 
             />
             <ResultRow
               label="Amount Per Person"
