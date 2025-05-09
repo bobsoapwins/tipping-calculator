@@ -105,8 +105,10 @@ export default function Home() {
   const [numberOfPeople, setNumberOfPeople] = useState<number | null>(1);
   const [isLoading, setIsLoading] = useState(true);
   const {toast} = useToast();
-  const searchParams = useSearchParams(); // Initialize useSearchParams
+  const searchParams = useSearchParams(); 
   const [progress, setProgress] = useState(0);
+
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '56a79f22';
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
@@ -145,10 +147,7 @@ export default function Home() {
   });
 
  useEffect(() => {
-    if (numberOfPeople !== null && numberOfPeople <= 0) {
-      // This check is now primarily for the toast, as zod handles form validation.
-      // Form validation errors will be displayed by <FormMessage />
-    }
+    // Removed toast logic as form validation messages handle this
   }, [numberOfPeople, toast]);
 
   const calculateTip = () => {
@@ -318,9 +317,8 @@ export default function Home() {
         </CardContent>
       </Card>
       <div className="fixed bottom-4 right-4 text-xs text-muted-foreground">
-        Version: 56a79f22
+        Version: {appVersion}
       </div>
     </div>
   );
 }
-
