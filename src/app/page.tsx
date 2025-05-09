@@ -245,7 +245,7 @@ export default function Home() {
                       min="1" 
                       className={cn(
                         'transition-all duration-300 focus:ring-2 focus:ring-primary',
-                        (field.value !== null && field.value <= 0) ? 'border-red-700 text-red-700' : '' 
+                        (field.value !== null && field.value <= 0) || field.value === null ? 'border-red-700 text-red-700' : '' 
                       )}
                       {...field}
                        value={field.value === null ? '' : field.value} 
@@ -283,7 +283,7 @@ export default function Home() {
             <ResultRow
               label="Total Bill"
               value={`$${totalBill.toFixed(2)}`}
-              icon={<PiggyBank className="w-4 h-4" />}
+              icon={<PiggyBank className="w-4 h-4 text-foreground" />}
               isError={false} 
             />
             <ResultRow
@@ -297,7 +297,7 @@ export default function Home() {
               }
               icon={
                 <Users
-                  className={cn('w-4 h-4', {
+                  className={cn('w-4 h-4 text-foreground', {
                     'text-red-500': amountPerPerson === 'Invalid',
                   })}
                 />
@@ -312,3 +312,4 @@ export default function Home() {
 }
 
     
+
