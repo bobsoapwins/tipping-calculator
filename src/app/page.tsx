@@ -26,7 +26,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
-import {useToast} from '@/hooks/use-toast';
+import {useToast}from '@/hooks/use-toast';
 import {Progress} from '@/components/ui/progress';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -143,7 +143,7 @@ export default function Home() {
   });
 
   const calculateTip = () => {
-    const currentNumPeople = numberOfPeople === null || isNaN(Number(numberOfPeople)) ? 0 : numberOfPeople;
+    const currentNumPeople = numberOfPeople === null || isNaN(Number(numberOfPeople)) || numberOfPeople <= 0 ? 0 : numberOfPeople;
 
 
     if (!billAmount || billAmount < 0)
@@ -277,8 +277,8 @@ export default function Home() {
             <ResultRow
               label="Tip Amount"
               value={`$${tipAmount.toFixed(2)}`}
-              icon={<PiggyBank className="w-4 h-4" />}
-              isError={amountPerPerson === 'Invalid'} 
+              icon={<PiggyBank className="w-4 h-4 text-foreground" />}
+              isError={false} 
             />
             <ResultRow
               label="Total Bill"
@@ -310,3 +310,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
