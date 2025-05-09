@@ -30,7 +30,6 @@ import {useToast}from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
 import {Progress} from '@/components/ui/progress';
 import { Toaster } from '@/components/ui/toaster';
-import packageJson from '../../package.json';
 
 const ResultRow = ({
   label,
@@ -319,7 +318,7 @@ export default function Home() {
         </CardContent>
       </Card>
       <div className="fixed bottom-4 right-4 text-xs text-muted-foreground">
-        Version: {packageJson.version}
+        Version: 56a79f22
       </div>
     </div>
   );
