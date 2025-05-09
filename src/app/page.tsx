@@ -108,7 +108,6 @@ export default function Home() {
   const searchParams = useSearchParams(); 
   const [progress, setProgress] = useState(0);
 
-  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '56a79f22';
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
@@ -316,9 +315,6 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
-      <div className="fixed bottom-4 right-4 text-xs text-muted-foreground">
-        Version: {appVersion}
-      </div>
     </div>
   );
 }
