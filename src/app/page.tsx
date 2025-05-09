@@ -29,6 +29,7 @@ import {cn} from '@/lib/utils';
 import {useToast}from '@/hooks/use-toast';
 import {Progress} from '@/components/ui/progress';
 import { Toaster } from '@/components/ui/toaster';
+import packageJson from '../../package.json';
 
 const ResultRow = ({
   label,
@@ -37,21 +38,21 @@ const ResultRow = ({
   isError,
 }: {
   label: string;
-  value: string | React.ReactNode; // Allow ReactNode for Invalid span
+  value: string | React.ReactNode; 
   icon: React.ReactNode;
   isError?: boolean;
 }) => (
   <div className="grid grid-cols-[1fr_auto] items-center gap-2 py-1">
     <div className="flex items-center gap-2">
       {icon}
-      <Label className={cn("text-sm", {'text-red-500': isError && label !== "Tip Amount" && label !== "Total Bill"})}>
+      <Label className={cn("text-sm", {'text-destructive': isError && label !== "Tip Amount" && label !== "Total Bill"})}>
         {label}
       </Label>
     </div>
     <div className="flex items-center gap-2">
       <Badge
         variant="secondary"
-        className={cn({'bg-red-100 text-red-500 border-red-500': isError})}
+        className={cn({'bg-destructive/20 text-destructive border-destructive': isError})}
       >
         {value}
       </Badge>
@@ -69,29 +70,29 @@ const formSchema = z.object({
 });
 
 const LoadingScreen = ({progress}: {progress: number}) => {
-  const [loading, setLoading] = useState(true);
+  const [loadingText, setLoadingText] = useState("Loading...");
 
   useEffect(() => {
     if (progress === 100) {
       const timer = setTimeout(() => {
-        setLoading(false);
-      }, 500); // Wait for a bit after reaching 100%
+        setLoadingText("Done!");
+      }, 500); 
 
       return () => clearTimeout(timer);
     }
   }, [progress]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      {loading ? (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+       {progress < 100 ? (
         <>
-          <Progress value={progress} className="w-64 h-4" /> {/* Increased height */}
-          <p className="mt-4 text-lg font-semibold">Loading... {progress}%</p>
+          <Progress value={progress} className="w-64 h-4 rounded-full shadow-inner border border-border" />
+          <p className="mt-4 text-lg font-semibold text-foreground">{loadingText} {progress}%</p>
         </>
       ) : (
         <div className="flex flex-col items-center">
-          <CheckCircle className="text-primary h-32 w-32" />
-          <p className="mt-4 text-lg font-semibold">Done!</p>
+          <CheckCircle className="text-primary h-32 w-32 animate-pulse" />
+          <p className="mt-4 text-lg font-semibold text-foreground">{loadingText}</p>
         </div>
       )}
     </div>
@@ -112,14 +113,14 @@ export default function Home() {
       if (progress < 100) {
         interval = setInterval(() => {
           setProgress(prevProgress => {
-            const randomIncrement = Math.floor(Math.random() * 15) + 5; // Random increment between 5 and 20
+            const randomIncrement = Math.floor(Math.random() * 15) + 5; 
             const newProgress = Math.min(prevProgress + randomIncrement, 100);
             return newProgress;
           });
-        }, 100);
+        }, 200); 
       } else if (progress === 100) {
-        // Ensures loading state changes after progress reaches 100% and LoadingScreen handles the delay
-        const loadingTimer = setTimeout(() => setIsLoading(false), 600); // Ensure this delay > LoadingScreen delay
+        
+        const loadingTimer = setTimeout(() => setIsLoading(false), 700); 
          return () => clearTimeout(loadingTimer);
       }
     } else {
@@ -141,6 +142,13 @@ export default function Home() {
       numberOfPeople: 1,
     },
   });
+
+ useEffect(() => {
+    if (numberOfPeople !== null && numberOfPeople <= 0) {
+      // This check is now primarily for the toast, as zod handles form validation.
+      // Form validation errors will be displayed by <FormMessage />
+    }
+  }, [numberOfPeople, toast]);
 
   const calculateTip = () => {
     const currentBillAmount = billAmount === null || isNaN(Number(billAmount)) || billAmount < 0 ? 0 : billAmount;
@@ -177,14 +185,14 @@ export default function Home() {
 
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 animate-in fade-in duration-700">
+    <div className={`flex flex-col items-center justify-center min-h-screen p-4 bg-background ${isLoading ? 'opacity-0' : 'animate-in fade-in duration-1000'}`}>
       <Toaster />
-      <Card className="w-full max-w-md space-y-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg">
+      <Card className="w-full max-w-md space-y-4 rounded-lg shadow-lg transition-all duration-500 hover:shadow-xl">
         <CardHeader className="space-y-1">
-           <CardTitle className={cn("text-2xl font-semibold text-center transition-colors duration-700", isLoading ? "text-gray-400" : "text-foreground")}>
+           <CardTitle className={cn("text-2xl font-semibold text-center transition-colors duration-700", isLoading ? "text-muted-foreground" : "text-foreground")}>
              Tip Smarter, Not Harder
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-muted-foreground">
             A simple tipping calculator by North Dunne
           </CardDescription>
         </CardHeader>
@@ -199,7 +207,7 @@ export default function Home() {
                 min="0"
                 value={billAmount === null ? '' : billAmount}
                 onChange={e => setBillAmount(e.target.value === '' ? null : parseFloat(e.target.value))}
-                className="transition-all duration-300 focus:ring-2 focus:ring-primary"
+                className="transition-all duration-300 focus:ring-2 focus:ring-primary hover:shadow-sm"
               />
             </div>
 
@@ -213,7 +221,7 @@ export default function Home() {
                   max="100"
                   step="1"
                   value={tipPercentage.toString()} 
-                  className="w-full h-2 bg-primary rounded-lg appearance-none cursor-pointer accent-accent transition-all duration-300"
+                  className="w-full h-2 bg-primary/50 rounded-lg appearance-none cursor-pointer accent-accent transition-all duration-300 hover:bg-primary/70"
                   onChange={e => setTipPercentage(parseInt(e.target.value))}
                 />
                 <Input
@@ -221,7 +229,7 @@ export default function Home() {
                   id="tipPercentage-number"
                   min="0"
                   value={tipPercentage}
-                  className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary"
+                  className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary hover:shadow-sm"
                   onChange={e => {
                     const val = e.target.value === '' ? 0 : parseInt(e.target.value);
                     const clampedVal = Math.max(0, isNaN(val) ? 0 : val);
@@ -244,8 +252,8 @@ export default function Home() {
                       placeholder="Enter number of people"
                       min="1" 
                       className={cn(
-                        'transition-all duration-300 focus:ring-2 focus:ring-primary',
-                        (field.value !== null && field.value <= 0) || field.value === null ? 'border-red-700 text-red-700' : '' 
+                        'transition-all duration-300 focus:ring-2 focus:ring-primary hover:shadow-sm',
+                        (field.value !== null && field.value <= 0) || field.value === null ? 'border-destructive text-destructive placeholder:text-destructive/50' : '' 
                       )}
                       {...field}
                        value={field.value === null ? '' : field.value} 
@@ -290,15 +298,16 @@ export default function Home() {
               label="Amount Per Person"
               value={
                 amountPerPerson === 'Invalid' ? (
-                  <span className="text-red-500">Invalid</span>
+                  <span className="text-destructive">Invalid</span>
                 ) : (
                   `$${amountPerPerson}`
                 )
               }
               icon={
                 <Users
-                  className={cn('w-4 h-4 text-foreground', {
-                    'text-red-500': amountPerPerson === 'Invalid',
+                  className={cn('w-4 h-4', {
+                    'text-destructive': amountPerPerson === 'Invalid',
+                    'text-foreground': amountPerPerson !== 'Invalid',
                   })}
                 />
               }
@@ -307,9 +316,9 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
+      <div className="fixed bottom-4 right-4 text-xs text-muted-foreground">
+        Version: {packageJson.version}
+      </div>
     </div>
   );
 }
-
-    
-
