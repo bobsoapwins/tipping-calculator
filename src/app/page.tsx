@@ -1,7 +1,7 @@
 
 'use client';
 
-import {useState, useEffect, Suspense} from 'react';
+import {useState, useEffect} from 'react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {
@@ -27,6 +27,7 @@ import * as z from 'zod';
 import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
 import {useToast}from '@/hooks/use-toast';
+import { useSearchParams } from 'next/navigation';
 import {Progress} from '@/components/ui/progress';
 import { Toaster } from '@/components/ui/toaster';
 import packageJson from '../../package.json';
@@ -105,6 +106,7 @@ export default function Home() {
   const [numberOfPeople, setNumberOfPeople] = useState<number | null>(1);
   const [isLoading, setIsLoading] = useState(true);
   const {toast} = useToast();
+  const searchParams = useSearchParams(); // Initialize useSearchParams
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
