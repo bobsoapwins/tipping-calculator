@@ -44,7 +44,7 @@ const ResultRow = ({
   <div className="grid grid-cols-[1fr_auto] items-center gap-2 py-1">
     <div className="flex items-center gap-2">
       {icon}
-      <Label className={cn("text-sm", {'text-red-500': isError})}>
+      <Label className={cn("text-sm", {'text-red-500': isError && label !== "Tip Amount" && label !== "Total Bill"})}>
         {label}
       </Label>
     </div>
@@ -143,18 +143,19 @@ export default function Home() {
   });
 
   const calculateTip = () => {
+    const currentBillAmount = billAmount === null || isNaN(Number(billAmount)) || billAmount < 0 ? 0 : billAmount;
     const currentNumPeople = numberOfPeople === null || isNaN(Number(numberOfPeople)) || numberOfPeople <= 0 ? 0 : numberOfPeople;
 
 
-    if (!billAmount || billAmount < 0)
+    if (currentBillAmount < 0)
       return {
         tipAmount: 0,
         totalBill: 0,
         amountPerPerson: currentNumPeople <= 0 ? 'Invalid' : '0.00',
       };
 
-    const tipAmount = billAmount * (tipPercentage / 100);
-    const totalBill = billAmount + tipAmount;
+    const tipAmount = currentBillAmount * (tipPercentage / 100);
+    const totalBill = currentBillAmount + tipAmount;
     const amountPerPerson =
       currentNumPeople <= 0
         ? 'Invalid'
@@ -169,7 +170,6 @@ export default function Home() {
 
   const {tipAmount, totalBill, amountPerPerson} = calculateTip();
 
-  // Removed useEffect that triggered toast for invalid number of people
 
   if (isLoading) {
     return <LoadingScreen progress={progress} />;
@@ -284,7 +284,7 @@ export default function Home() {
               label="Total Bill"
               value={`$${totalBill.toFixed(2)}`}
               icon={<PiggyBank className="w-4 h-4" />}
-              isError={amountPerPerson === 'Invalid'} 
+              isError={false} 
             />
             <ResultRow
               label="Amount Per Person"
