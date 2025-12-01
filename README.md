@@ -1,5 +1,5 @@
-# Firebase Studio
+# A Simple Tipping Calculator
 
-This is a NextJS starter in Firebase Studio.
+This is a tipping calculator I made a while back and wanted to publish it on Github.
 
-To get started, take a look at src/app/page.tsx.
+It's not complex or anything, but it is also not the most simple thing in the world.
