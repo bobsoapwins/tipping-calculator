@@ -54,6 +54,12 @@
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.24.2"
   },
+  "engines": {
+    "node": ">=20"
+  },
+  "overrides": {
+    "minimatch": "^10.2.1"
+  },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
