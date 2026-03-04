@@ -1,0 +1,46 @@
+name: Codeowner Approval Check
+
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  CODEOWNER: bobsoapwins
+
+jobs:
+  check-codeowner-approval:
+    name: Codeowner Approval (@bobsoapwins)
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Check for codeowner approval
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          CODEOWNER: ${{ env.CODEOWNER }}
+        with:
+          script: |
+            const codeowner = process.env.CODEOWNER;
+
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request
+                ? context.payload.pull_request.number
+                : context.payload.review.pull_request.number,
+            });
+
+            // Find the latest review from the codeowner
+            const codeownerReviews = reviews
+              .filter(r => r.user.login === codeowner)
+              .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+
+            if (codeownerReviews.length === 0) {
+              core.setFailed(`❌ This pull request requires an approval from the codeowner @${codeowner}. No review found yet.`);
+            } else if (codeownerReviews[0].state === 'APPROVED') {
+              console.log(`✅ ${codeowner} has approved this pull request.`);
+            } else {
+              core.setFailed(`❌ This pull request requires an approval from the codeowner @${codeowner}.`);
+            }
