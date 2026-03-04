@@ -219,7 +219,7 @@ export default function Home() {
                   step="1"
                   value={tipPercentage.toString()} 
                   className="w-full h-2 bg-primary/50 rounded-lg appearance-none cursor-pointer accent-accent transition-all duration-300 hover:bg-primary/70"
-                  onChange={e => setTipPercentage(parseInt(e.target.value))}
+                  onChange={e => setTipPercentage(parseInt(e.target.value, 10))}
                 />
                 <Input
                   type="number"
@@ -228,7 +228,7 @@ export default function Home() {
                   value={tipPercentage}
                   className="w-20 transition-all duration-300 focus:ring-2 focus:ring-primary hover:shadow-sm"
                   onChange={e => {
-                    const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
                     const clampedVal = Math.max(0, isNaN(val) ? 0 : val);
                     setTipPercentage(clampedVal);
                   }}
@@ -260,7 +260,7 @@ export default function Home() {
                            field.onChange(null); 
                            setNumberOfPeople(null);
                         } else {
-                           const value = parseInt(rawValue);
+                           const value = parseInt(rawValue, 10);
                            if (!isNaN(value)) {
                              field.onChange(value); 
                              setNumberOfPeople(value);
