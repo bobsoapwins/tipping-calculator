@@ -123,7 +123,7 @@ export default function Home() {
         const loadingTimer = setTimeout(() => setIsLoading(false), 700); 
          return () => clearTimeout(loadingTimer);
       }
-
+    }
 
     return () => {
       if (interval) clearInterval(interval);
@@ -179,7 +179,7 @@ export default function Home() {
 
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen p-4 bg-background ${isLoading ? 'opacity-0' : 'animate-in fade-in duration-1000'}`}>
+    <div className={`flex flex-col items-center justify-center min-h-screen p-4 bg-background animate-in fade-in duration-1000`}>
       <Toaster />
       <Card className="w-full max-w-md space-y-4 rounded-lg shadow-lg transition-all duration-500 hover:shadow-xl">
         <CardHeader className="space-y-1">
