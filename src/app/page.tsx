@@ -123,9 +123,6 @@ export default function Home() {
         const loadingTimer = setTimeout(() => setIsLoading(false), 700); 
          return () => clearTimeout(loadingTimer);
       }
-    } else {
-       if (interval) clearInterval(interval);
-    }
 
 
     return () => {
@@ -186,7 +183,7 @@ export default function Home() {
       <Toaster />
       <Card className="w-full max-w-md space-y-4 rounded-lg shadow-lg transition-all duration-500 hover:shadow-xl">
         <CardHeader className="space-y-1">
-           <CardTitle className={cn("text-2xl font-semibold text-center transition-colors duration-700", isLoading ? "text-muted-foreground" : "text-foreground")}>
+           <CardTitle className={cn("text-2xl font-semibold text-center transition-colors duration-700", "text-foreground")}>
              Tip Smarter, Not Harder
           </CardTitle>
           <CardDescription className="text-center text-muted-foreground">
