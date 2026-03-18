@@ -1,0 +1,119 @@
+name: Audit Log
+
+# Capture every meaningful repository event and record it in a structured log.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - closed
+      - reopened
+      - synchronize
+      - review_requested
+      - review_request_removed
+  pull_request_review:
+    types:
+      - submitted
+      - dismissed
+  issues:
+    types:
+      - opened
+      - closed
+      - reopened
+      - deleted
+  fork:
+  member:
+    types:
+      - added
+      - removed
+      - edited
+  release:
+    types:
+      - created
+      - published
+      - deleted
+  workflow_run:
+    workflows:
+      - "CodeQL Security Scan"
+      - "Dependency Review"
+      - "PR Validation"
+      - "Secret Detection"
+      - "Repository Lockdown"
+      - "Access Monitor"
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    name: Record Audit Event
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Write audit log entry
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          ACTOR: ${{ github.actor }}
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TIMESTAMP: ${{ github.event.head_commit.timestamp || github.event.pull_request.updated_at || github.event.issue.updated_at }}
+        run: |
+          mkdir -p audit-logs
+          LOG_FILE="audit-logs/$(date -u +%Y-%m).log"
+          TS="${TIMESTAMP:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+          ENTRY=$(jq -n \
+            --arg ts "$TS" \
+            --arg event "$EVENT_NAME" \
+            --arg action "$EVENT_ACTION" \
+            --arg actor "$ACTOR" \
+            --arg ref "$REF" \
+            --arg sha "$SHA" \
+            --arg repo "$REPO" \
+            --arg run_id "$RUN_ID" \
+            --arg run_url "$RUN_URL" \
+            '{timestamp: $ts, event: $event, action: $action, actor: $actor, ref: $ref, sha: $sha, repository: $repo, run_id: $run_id, run_url: $run_url}')
+          echo "$ENTRY" >> "$LOG_FILE"
+          echo "Audit entry written to $LOG_FILE:"
+          echo "$ENTRY" | jq .
+
+      - name: Commit audit log
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add audit-logs/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "audit: log ${{ github.event_name }} event by ${{ github.actor }} [skip ci]"
+            CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+            if [ -z "$CURRENT_BRANCH" ]; then
+              echo "ℹ️ Skipping push: in detached HEAD state (e.g., pull_request event)."
+              echo "   The audit entry has been committed locally but not pushed."
+            else
+              git push origin "HEAD:$CURRENT_BRANCH" || {
+                EXIT_CODE=$?
+                echo "⚠️ Warning: Could not push audit log (exit code: $EXIT_CODE)."
+                echo "   This is expected when the main branch is protected and requires PRs."
+                echo "   The audit entry has been committed locally but not pushed."
+                exit 0
+              }
+            fi
+          fi
