@@ -9,6 +9,11 @@ on:
       - removed
       - edited
 
+  deploy_key:
+    types:
+      - created
+      - deleted
+
   branch_protection_rule:
     types:
       - created
