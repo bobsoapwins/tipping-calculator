@@ -1,0 +1,157 @@
+name: Repository Lockdown
+
+# This workflow implements an emergency "Repository Lockdown" feature.
+# When triggered manually, it:
+#   1. Creates a high-priority incident issue in the repository.
+#   2. Posts a detailed alert summary (actor, timestamp, reason).
+#   3. Optionally notifies administrators via a webhook.
+#
+# HOW TO TRIGGER:
+#   GitHub UI  → Actions → Repository Lockdown → Run workflow
+#   GitHub CLI → gh workflow run lockdown.yml -f reason="<reason>"
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for initiating lockdown (required)"
+        required: true
+        type: string
+      notify_webhook:
+        description: "Send alert to LOCKDOWN_WEBHOOK_URL secret? (true/false)"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  lockdown:
+    name: Execute Repository Lockdown
+    runs-on: ubuntu-latest
+    environment: lockdown  # Requires environment-level approval if configured
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          # Use 'audit' to allow egress to configured webhook URLs
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Record lockdown timestamp
+        id: timestamp
+        run: echo "ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Create incident issue
+        id: create_issue
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const reason = `${{ github.event.inputs.reason }}`;
+            const actor  = `${{ github.actor }}`;
+            const ts     = `${{ steps.timestamp.outputs.ts }}`;
+            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+
+            const body = [
+              `## REPOSITORY LOCKDOWN ACTIVE`,
+              ``,
+              `| Field       | Value |`,
+              `|-------------|-------|`,
+              `| **Actor**   | @${actor} |`,
+              `| **Time**    | ${ts} |`,
+              `| **Reason**  | ${reason} |`,
+              `| **Run URL** | [View workflow run](${runUrl}) |`,
+              ``,
+              `### Immediate Actions Required`,
+              ``,
+              `- [ ] Verify identity of the actor who initiated lockdown`,
+              `- [ ] Assess scope of potential breach or issue`,
+              `- [ ] Review recent commits and access logs in \`audit-logs/\``,
+              `- [ ] Rotate any credentials that may have been exposed`,
+              `- [ ] Enable branch protection enhancements if not already active`,
+              `- [ ] Resolve this issue only after full incident review`,
+              ``,
+              `### Resolution Checklist`,
+              ``,
+              `- [ ] Root cause identified`,
+              `- [ ] Affected data/secrets remediated`,
+              `- [ ] All stakeholders notified`,
+              `- [ ] Post-incident review scheduled`,
+            ].join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              title: `[LOCKDOWN] ${ts} — Initiated by @${actor}`,
+              body,
+              labels: ['lockdown', 'incident', 'security'],
+            });
+
+            console.log(`Created incident issue: ${issue.data.html_url}`);
+            return issue.data.number;
+
+      - name: Write lockdown record to audit log
+        run: |
+          mkdir -p audit-logs
+          LOG_FILE="audit-logs/$(date -u +%Y-%m).log"
+          ENTRY=$(jq -n \
+            --arg ts    "${{ steps.timestamp.outputs.ts }}" \
+            --arg actor "${{ github.actor }}" \
+            --arg reason "${{ github.event.inputs.reason }}" \
+            --arg issue "${{ steps.create_issue.outputs.result }}" \
+            --arg run_id "${{ github.run_id }}" \
+            '{timestamp: $ts, event: "lockdown", actor: $actor, reason: $reason, incident_issue: $issue, run_id: $run_id}')
+          echo "$ENTRY" >> "$LOG_FILE"
+          echo "$ENTRY" | jq .
+
+      - name: Commit lockdown audit record
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add audit-logs/
+          git diff --cached --quiet || git commit -m "audit: LOCKDOWN initiated by ${{ github.actor }} [skip ci]"
+          git push || {
+            EXIT_CODE=$?
+            echo "LogWarning: Could not push lockdown audit record (exit code: $EXIT_CODE)."
+            echo "   This is expected when the main branch is protected and requires PRs."
+            echo "   The audit entry has been committed locally but not pushed."
+            exit 0
+          }
+
+      - name: Send webhook notification
+        if: github.event.inputs.notify_webhook == 'true'
+        env:
+          WEBHOOK_URL: ${{ secrets.LOCKDOWN_WEBHOOK_URL }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "No webhook URL configured (LOCKDOWN_WEBHOOK_URL secret is not set), skipping notification."
+            exit 0
+          fi
+          PAYLOAD=$(jq -n \
+            --arg text "*REPOSITORY LOCKDOWN* — \`${{ github.repository }}\`\nInitiated by *${{ github.actor }}* at ${{ steps.timestamp.outputs.ts }}\nReason: ${{ github.event.inputs.reason }}\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            '{text: $text}')
+          curl -s -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
+          echo "Webhook notification sent."
+
+      - name: Print lockdown summary
+        run: |
+          echo "============================================="
+          echo "  REPOSITORY LOCKDOWN INITIATED"
+          echo "============================================="
+          echo "  Actor   : ${{ github.actor }}"
+          echo "  Time    : ${{ steps.timestamp.outputs.ts }}"
+          echo "  Reason  : ${{ github.event.inputs.reason }}"
+          echo "  Issue   : ${{ steps.create_issue.outputs.result }}"
+          echo "  Run     : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "============================================="

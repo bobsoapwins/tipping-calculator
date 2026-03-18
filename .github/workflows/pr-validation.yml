@@ -1,0 +1,158 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  # ── 1. Validate PR title follows Conventional Commits ──────────────────────
+  pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Check PR title format
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          # Skip title validation for automated Copilot agent branches
+          if echo "$BRANCH" | grep -qP "^copilot/"; then
+            echo "ℹ️ Skipping PR title check for Copilot automated branch: $BRANCH"
+            exit 0
+          fi
+          PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|security)(\(.+\))?: .{1,100}$"
+          if ! echo "$PR_TITLE" | grep -qP "$PATTERN"; then
+            echo "❌ PR title does not follow Conventional Commits format."
+            echo "   Expected: <type>(<scope>): <description>"
+            echo "   Example:  feat(auth): add multi-factor authentication"
+            echo "   Allowed types: feat fix docs style refactor perf test build ci chore revert security"
+            exit 1
+          fi
+          echo "✅ PR title is valid: $PR_TITLE"
+
+  # ── 2. Validate branch naming convention ──────────────────────────────────
+  branch-name:
+    name: Validate Branch Name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Check branch naming convention
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          # Skip validation for automated Dependabot branches
+          if echo "$BRANCH" | grep -qP "^dependabot/"; then
+            echo "ℹ️ Skipping branch name check for Dependabot branch: $BRANCH"
+            exit 0
+          fi
+          PATTERN="^(feature|fix|hotfix|docs|chore|security|release|copilot)/[a-z0-9]([a-z0-9._-]*[a-z0-9])?$"
+          if ! echo "$BRANCH" | grep -qP "$PATTERN"; then
+            echo "❌ Branch name does not follow the required convention."
+            echo "   Expected: <type>/<slug>"
+            echo "   Example:  feature/add-encryption"
+            echo "   Allowed types: feature fix hotfix docs chore security release copilot"
+            exit 1
+          fi
+          echo "✅ Branch name is valid: $BRANCH"
+
+  # ── 3. Verify security checklist is filled out ────────────────────────────
+  security-checklist:
+    name: Verify Security Checklist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Check security checklist completion
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          # Skip checklist validation for automated Copilot and Dependabot branches
+          if echo "$BRANCH" | grep -qP "^(copilot|dependabot)/"; then
+            echo "ℹ️ Skipping security checklist check for automated branch: $BRANCH"
+            exit 0
+          fi
+          # Look for unchecked security checklist items
+          if echo "$PR_BODY" | grep -q "\- \[ \]"; then
+            echo "❌ Security checklist contains unchecked items."
+            echo "   All items in the security checklist must be checked before merging."
+            exit 1
+          fi
+          # Ensure the checklist section is present at all
+          if ! echo "$PR_BODY" | grep -q "Security Checklist"; then
+            echo "❌ PR body is missing the Security Checklist section."
+            echo "   Please use the pull request template."
+            exit 1
+          fi
+          echo "✅ Security checklist is complete."
+
+  # ── 4. Detect large files that might contain sensitive data ───────────────
+  file-size-check:
+    name: Detect Large / Sensitive Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check for large files (> 5 MB)
+        run: |
+          FAILED=0
+          while IFS= read -r -d '' FILE; do
+            SIZE=$(stat -c%s "$FILE")
+            if [ "$SIZE" -gt 5242880 ]; then
+              echo "❌ Large file detected: $FILE ($SIZE bytes)"
+              FAILED=1
+            fi
+          done < <(git diff --name-only --diff-filter=AM origin/main...HEAD -z 2>/dev/null || true)
+          if [ "$FAILED" -eq 1 ]; then
+            echo "Files larger than 5 MB require explicit approval from a repository owner."
+            exit 1
+          fi
+          echo "✅ No oversized files detected."
+
+      - name: Check for forbidden file extensions
+        run: |
+          FORBIDDEN_EXTENSIONS=".env .pem .key .p12 .pfx .crt .cer .pkcs12 .keystore .jks"
+          FAILED=0
+          for EXT in $FORBIDDEN_EXTENSIONS; do
+            MATCHES=$(git diff --name-only --diff-filter=AR origin/main...HEAD 2>/dev/null | grep -i "\\${EXT}$" || true)
+            if [ -n "$MATCHES" ]; then
+              echo "❌ Forbidden file type detected ($EXT): $MATCHES"
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" -eq 1 ]; then
+            echo "Sensitive file types must not be committed to the repository."
+            exit 1
+          fi
+          echo "✅ No forbidden file extensions found."
