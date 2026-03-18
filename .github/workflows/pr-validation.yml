@@ -124,6 +124,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set PR base SHA
+        run: echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_ENV"
+
       - name: Check for large files (> 5 MB)
         run: |
           FAILED=0
@@ -133,7 +136,7 @@ jobs:
               echo "❌ Large file detected: $FILE ($SIZE bytes)"
               FAILED=1
             fi
-          done < <(git diff --name-only --diff-filter=AM origin/main...HEAD -z 2>/dev/null || true)
+          done < <(git diff --name-only --diff-filter=AM "${PR_BASE_SHA}...HEAD" -z 2>/dev/null || true)
           if [ "$FAILED" -eq 1 ]; then
             echo "Files larger than 5 MB require explicit approval from a repository owner."
             exit 1
@@ -145,7 +148,7 @@ jobs:
           FORBIDDEN_EXTENSIONS=".env .pem .key .p12 .pfx .crt .cer .pkcs12 .keystore .jks"
           FAILED=0
           for EXT in $FORBIDDEN_EXTENSIONS; do
-            MATCHES=$(git diff --name-only --diff-filter=AR origin/main...HEAD 2>/dev/null | grep -i "\\${EXT}$" || true)
+            MATCHES=$(git diff --name-only --diff-filter=AR "${PR_BASE_SHA}...HEAD" 2>/dev/null | grep -i "\\${EXT}$" || true)
             if [ -n "$MATCHES" ]; then
               echo "❌ Forbidden file type detected ($EXT): $MATCHES"
               FAILED=1
