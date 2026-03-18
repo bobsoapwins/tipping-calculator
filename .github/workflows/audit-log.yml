@@ -48,7 +48,6 @@ on:
 
 permissions:
   contents: write
-  issues: write
 
 jobs:
   audit:
@@ -79,8 +78,9 @@ jobs:
         run: |
           mkdir -p audit-logs
           LOG_FILE="audit-logs/$(date -u +%Y-%m).log"
+          TS="${TIMESTAMP:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
           ENTRY=$(jq -n \
-            --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg ts "$TS" \
             --arg event "$EVENT_NAME" \
             --arg action "$EVENT_ACTION" \
             --arg actor "$ACTOR" \

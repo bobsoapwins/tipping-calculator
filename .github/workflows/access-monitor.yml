@@ -24,7 +24,6 @@ on:
 permissions:
   contents: read
   issues: write
-  security-events: write
 
 jobs:
   alert:
@@ -57,7 +56,7 @@ jobs:
           echo "  Time   : $TS"
 
       - name: Create security alert issue
-        uses: actions/github-script@v8
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
