@@ -12,8 +12,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
-  statuses: write
+  issues: write
 
 jobs:
   # ── 1. Validate PR title follows Conventional Commits ──────────────────────
@@ -120,12 +119,9 @@ jobs:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Set PR base SHA
-        run: echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_ENV"
 
       - name: Check for large files (> 5 MB)
         run: |
@@ -136,7 +132,7 @@ jobs:
               echo "❌ Large file detected: $FILE ($SIZE bytes)"
               FAILED=1
             fi
-          done < <(git diff --name-only --diff-filter=AM "${PR_BASE_SHA}...HEAD" -z 2>/dev/null || true)
+          done < <(git diff --name-only --diff-filter=AM origin/main...HEAD -z 2>/dev/null || true)
           if [ "$FAILED" -eq 1 ]; then
             echo "Files larger than 5 MB require explicit approval from a repository owner."
             exit 1
@@ -148,7 +144,7 @@ jobs:
           FORBIDDEN_EXTENSIONS=".env .pem .key .p12 .pfx .crt .cer .pkcs12 .keystore .jks"
           FAILED=0
           for EXT in $FORBIDDEN_EXTENSIONS; do
-            MATCHES=$(git diff --name-only --diff-filter=AR "${PR_BASE_SHA}...HEAD" 2>/dev/null | grep -i "\\${EXT}$" || true)
+            MATCHES=$(git diff --name-only --diff-filter=AR origin/main...HEAD 2>/dev/null | grep -i "\\${EXT}$" || true)
             if [ -n "$MATCHES" ]; then
               echo "❌ Forbidden file type detected ($EXT): $MATCHES"
               FAILED=1
@@ -159,3 +155,142 @@ jobs:
             exit 1
           fi
           echo "✅ No forbidden file extensions found."
+
+  # ── 5. Comment PR with merge impact assessment ──────────────────────────────
+  merge-impact:
+    name: Merge Impact Assessment
+    runs-on: ubuntu-latest
+    concurrency:
+      group: merge-impact-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Analyze PR and publish impact comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = '<!-- merge-impact-assessment -->';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.payload.pull_request.number;
+            const headRepo = context.payload.pull_request?.head?.repo;
+            const baseRepo = context.payload.pull_request?.base?.repo;
+            const isCrossRepositoryPr = Boolean(
+              headRepo && baseRepo && (
+                (typeof headRepo.id === 'number' && typeof baseRepo.id === 'number')
+                  ? headRepo.id !== baseRepo.id
+                  : headRepo.full_name !== baseRepo.full_name
+              )
+            );
+
+            if (isCrossRepositoryPr) {
+              core.notice('Cross-repository pull request detected; skipping merge-impact comment upsert because write permissions are not available on pull_request events from forks.');
+              return;
+            }
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner, repo, pull_number, per_page: 100 }
+            );
+
+            const totals = files.reduce((acc, file) => {
+              acc.files += 1;
+              acc.additions += file.additions || 0;
+              acc.deletions += file.deletions || 0;
+              return acc;
+            }, { files: 0, additions: 0, deletions: 0 });
+
+            const changedPaths = files.map((f) => f.filename);
+            const workflowChanges = changedPaths.filter((p) => p.startsWith('.github/workflows/'));
+            const branchGovernanceChanges = changedPaths.filter((p) =>
+              /^(\.github\/CODEOWNERS|CODEOWNERS|SECURITY\.md|\.github\/dependabot\.yml)$/i.test(p)
+            );
+            const auditPipelineChanges = changedPaths.filter((p) =>
+              /^(\.github\/workflows\/audit-log\.yml|docs\/AUDIT_LOG_SETUP\.md)$/i.test(p)
+            );
+            const secretLikeFileChanges = changedPaths.filter((p) =>
+              /(secret|token|credential|password|private[-_]?key|\.pem$|\.p12$|\.pfx$|\.key$)/i.test(p)
+            );
+            const docsOnly = changedPaths.length > 0 &&
+              changedPaths.every((p) => /^(docs\/|.*\.md$)/i.test(p));
+
+            let riskScore = 0;
+            if (totals.files > 100) riskScore += 3;
+            else if (totals.files > 25) riskScore += 2;
+            if ((totals.additions + totals.deletions) > 1000) riskScore += 2;
+            if (workflowChanges.length > 0) riskScore += 4;
+            if (branchGovernanceChanges.length > 0) riskScore += 3;
+            if (auditPipelineChanges.length > 0) riskScore += 2;
+            if (secretLikeFileChanges.length > 0) riskScore += 3;
+            if (docsOnly) riskScore = Math.max(0, riskScore - 2);
+
+            let riskLevel = 'Low';
+            if (riskScore >= 9) {
+              riskLevel = 'Critical';
+            } else if (riskScore >= 6) {
+              riskLevel = 'High';
+            } else if (riskScore >= 3) {
+              riskLevel = 'Medium';
+            }
+
+            const effects = [];
+            effects.push(`Changes ${totals.files} file(s), +${totals.additions}/-${totals.deletions} lines.`);
+            if (workflowChanges.length) effects.push(`Modifies CI/security automation in \`.github/workflows/\` (${workflowChanges.length} file(s)).`);
+            if (branchGovernanceChanges.length) effects.push(`Touches repository governance files (e.g., CODEOWNERS, dependabot, security policy).`);
+            if (auditPipelineChanges.length) effects.push(`Touches audit logging pipeline/configuration.`);
+            if (secretLikeFileChanges.length) effects.push(`Touches files with names that may be secret-related. Confirm no credentials are introduced.`);
+            if (docsOnly) effects.push(`Primarily documentation-focused changes.`);
+            if (effects.length === 1) effects.push('No high-sensitivity paths detected by heuristic checks.');
+
+            const topChanged = [...files]
+              .sort((a, b) => (b.changes || 0) - (a.changes || 0))
+              .slice(0, 5)
+              .map((f) => `- \`${f.filename}\` (+${f.additions}/-${f.deletions})`)
+              .join('\n') || '- None';
+
+            const body = [
+              marker,
+              '### Merge Impact Assessment',
+              '',
+              `**Danger Level:** \`${riskLevel}\``,
+              `**Risk Score:** \`${riskScore}\``,
+              '',
+              '### Repository Effects',
+              ...effects.map((e) => `- ${e}`),
+              '',
+              '### Most Impacted Files',
+              topChanged,
+              '',
+              
+            ].join('\n');
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: pull_number, per_page: 100 }
+            );
+
+            const existing = comments.find((c) =>
+              c.user?.login === 'github-actions[bot]' && c.body?.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body
+              });
+              core.info(`Updated merge impact comment: ${existing.id}`);
+            } else {
+              const created = await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body
+              });
+              core.info(`Created merge impact comment: ${created.data.id}`);
+            }
