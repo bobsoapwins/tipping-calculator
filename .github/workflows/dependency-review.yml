@@ -1,9 +1,12 @@
 name: Dependency Review
 
 on:
+  push:
+    branches:
+      - '**'        # Run on push to all branches
   pull_request:
     branches:
-      - main
+      - '**'        # Run on PRs targeting any branch
 
 permissions:
   contents: read
