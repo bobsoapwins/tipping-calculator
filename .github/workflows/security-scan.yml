@@ -1,7 +1,8 @@
 name: CodeQL Security Scan
 
 on:
-  workflow_dispatch:
+  push:
+  pull_request:
 
 permissions:
   contents: read
