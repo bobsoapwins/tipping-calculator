@@ -26,10 +26,7 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
         with:
-          # Fail on any severity level
           fail-on-severity: low
-          # Block PRs that introduce packages with known vulnerabilities
           deny-licenses: AGPL-1.0, AGPL-3.0, GPL-1.0, GPL-2.0, GPL-3.0, LGPL-2.0, LGPL-2.1, LGPL-3.0
           comment-summary-in-pr: always
-          # Warn on any new vulnerable package
           warn-on-openssf-scorecard-level: 5
