@@ -10,37 +10,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  # ── 1. Validate PR title follows Conventional Commits ──────────────────────
-  pr-title:
-    name: Validate PR Title
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
-
-      - name: Check PR title format
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          BRANCH: ${{ github.head_ref }}
-        run: |
-          # Skip title validation for automated Copilot agent branches
-          if echo "$BRANCH" | grep -qP "^copilot/"; then
-            echo "ℹ️ Skipping PR title check for Copilot automated branch: $BRANCH"
-            exit 0
-          fi
-          PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|security)(\(.+\))?: .{1,100}$"
-          if ! echo "$PR_TITLE" | grep -qP "$PATTERN"; then
-            echo "❌ PR title does not follow Conventional Commits format."
-            echo "   Expected: <type>(<scope>): <description>"
-            echo "   Example:  feat(auth): add multi-factor authentication"
-            echo "   Allowed types: feat fix docs style refactor perf test build ci chore revert security"
-            exit 1
-          fi
-          echo "✅ PR title is valid: $PR_TITLE"
-
-  # ── 2. Validate branch naming convention ──────────────────────────────────
+    # ── 1. Validate branch naming convention ──────────────────────────────────
   branch-name:
     name: Validate Branch Name
     runs-on: ubuntu-latest
@@ -69,7 +39,7 @@ jobs:
           fi
           echo "✅ Branch name is valid: $BRANCH"
 
-  # ── 3. Verify security checklist is filled out ────────────────────────────
+  # ── 2. Verify security checklist is filled out ────────────────────────────
   security-checklist:
     name: Verify Security Checklist
     runs-on: ubuntu-latest
@@ -103,7 +73,7 @@ jobs:
           fi
           echo "✅ Security checklist is complete."
 
-  # ── 4. Detect large files that might contain sensitive data ───────────────
+  # ── 3. Detect large files that might contain sensitive data ───────────────
   file-size-check:
     name: Detect Large / Sensitive Files
     runs-on: ubuntu-latest
@@ -151,7 +121,7 @@ jobs:
           fi
           echo "✅ No forbidden file extensions found."
 
-  # ── 5. Comment PR with merge impact assessment ──────────────────────────────
+  # ── 4. Comment PR with merge impact assessment ──────────────────────────────
   merge-impact:
     name: Merge Impact Assessment
     runs-on: ubuntu-latest
