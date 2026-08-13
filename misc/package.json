@@ -60,7 +60,7 @@
     "minimatch": "^10.2.1",
     "@tootallnate/once": "^3.0.1",
     "uuid": "^14.0.0",
-    "postcss": "8.5.10",
+    "postcss": "8.5.23",
     "protobufjs": "^7.5.8",
     "@opentelemetry/sdk-node": "^0.218.0",
     "@opentelemetry/exporter-prometheus": "^0.218.0"
@@ -70,7 +70,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "genkit-cli": "^1.26.0",
-    "postcss": "8.5.10",
+    "postcss": "8.5.23",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }
