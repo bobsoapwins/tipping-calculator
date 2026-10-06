@@ -58,6 +58,8 @@
     "minimatch": "^10.2.1",
     "@tootallnate/once": "^3.0.1",
     "uuid": "^14.0.0",
+    "@grpc/grpc-js": "1.14.5",
+    "firebase-admin": "^14.5.0",
     "postcss": "8.5.23",
     "protobufjs": "^7.6.5",
     "qs": "^6.16.0",
