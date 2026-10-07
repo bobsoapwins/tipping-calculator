@@ -65,6 +65,7 @@
     "qs": "^6.16.0",
     "@opentelemetry/core": "^2.10.0",
     "@opentelemetry/propagator-jaeger": "^2.10.0",
+    "@opentelemetry/instrumentation-pg": "^0.73.0",
     "@opentelemetry/sdk-node": "^0.218.0",
     "@opentelemetry/exporter-prometheus": "^0.218.0"
   },
