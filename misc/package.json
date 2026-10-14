@@ -74,7 +74,8 @@
     "@opentelemetry/instrumentation-oracledb": "^0.46.0",
     "@opentelemetry/instrumentation-tedious": "^0.40.0",
     "@opentelemetry/sdk-node": "^0.218.0",
-    "@opentelemetry/exporter-prometheus": "^0.218.0"
+    "@opentelemetry/exporter-prometheus": "^0.218.0",
+    "handlebars": "^4.7.10"
   },
   "devDependencies": {
     "@types/node": "^20",
